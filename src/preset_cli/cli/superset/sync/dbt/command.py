@@ -3,13 +3,12 @@ A command to sync dbt models/metrics to Superset and charts/dashboards back as e
 """
 
 import logging
+import os
 import os.path
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import os
-os.environ['PYTHONIOENCODING'] = 'utf-8'  
 import click
 import yaml
 from yarl import URL
@@ -40,7 +39,7 @@ from preset_cli.exceptions import CLIError, DatabaseNotFoundError
 from preset_cli.lib import raise_cli_errors
 
 _logger = logging.getLogger(__name__)
-
+os.environ['PYTHONIOENCODING'] = 'utf-8'  
 
 @click.command()
 @click.argument("file", type=click.Path(exists=True, resolve_path=True))
