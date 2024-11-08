@@ -39,7 +39,8 @@ from preset_cli.exceptions import CLIError, DatabaseNotFoundError
 from preset_cli.lib import raise_cli_errors
 
 _logger = logging.getLogger(__name__)
-os.environ['PYTHONIOENCODING'] = 'utf-8'  
+os.environ["PYTHONIOENCODING"] = "utf-8"
+
 
 @click.command()
 @click.argument("file", type=click.Path(exists=True, resolve_path=True))
