@@ -23,7 +23,6 @@ from preset_cli.cli.superset.sync.dbt.metrics import (
     get_metrics_for_model,
     get_models_from_sql,
     get_superset_metrics_per_model,
-    replace_metric_syntax,
 )
 
 
