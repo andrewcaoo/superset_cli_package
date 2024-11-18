@@ -22,7 +22,7 @@ You can also install from ``main``, if you need recent features:
 
 .. code-block:: bash
 
-     $ pip install "git+https://github.com:andrewcaoo/superset_cli_package.git"
+     $ pip install "git+https://github.com/andrewcaoo/superset_cli_package.git"
 
 Authentication
 ==============
