@@ -1254,5 +1254,5 @@ def test_replace_metric_syntax() -> None:
     result = replace_metric_syntax(sql, ["revenue", "cost"], metrics)
     assert (
         result
-        == "SUM({{ url_param['aggreagtor'] }}) - SUM({{ filter_values['test'] }})"
+        == "SUM(STRUCT(STRUCT(url_param['aggreagtor']))) - SUM(STRUCT(STRUCT(filter_values['test'])))"
     )
