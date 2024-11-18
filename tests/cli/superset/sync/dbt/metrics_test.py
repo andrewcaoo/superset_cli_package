@@ -1221,38 +1221,3 @@ SUM(
             },
         ],
     }
-
-
-def test_replace_metric_syntax() -> None:
-    """
-    Test the ``replace_metric_syntax`` method.
-    """
-    og_metric_schema = OGMetricSchema()
-    sql = "revenue - cost"
-    metrics = {
-        "revenue": og_metric_schema.load(
-            {
-                "name": "revenue",
-                "unique_id": "revenue",
-                "depends_on": [],
-                "calculation_method": "derived",
-                "expression": "SUM({{ url_param['aggreagtor'] }})",
-                "dialect": "postgres",
-            },
-        ),
-        "cost": og_metric_schema.load(
-            {
-                "name": "cost",
-                "unique_id": "cost",
-                "depends_on": [],
-                "calculation_method": "derived",
-                "expression": "SUM({{ filter_values['test'] }})",
-                "dialect": "postgres",
-            },
-        ),
-    }
-    result = replace_metric_syntax(sql, ["revenue", "cost"], metrics)
-    assert (
-        result
-        == "SUM(STRUCT(STRUCT(url_param['aggreagtor']))) - SUM(STRUCT(STRUCT(filter_values['test'])))"
-    )
