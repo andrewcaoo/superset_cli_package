@@ -15,6 +15,7 @@ beautifulsoup4==4.11.1
 certifi==2021.10.8
 charset-normalizer==2.0.12
 click==8.1.2
+clickhouse-connect==0.8.10
 clickhouse-driver==0.2.9
 clickhouse-sqlalchemy==0.3.2
 commonmark==0.9.1
