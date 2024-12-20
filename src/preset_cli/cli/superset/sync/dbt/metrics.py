@@ -309,7 +309,6 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
                 type(metric_expression.this),
             )
 
-
         # Replace aliases in the WHERE clause with their original expressions
         for node, _, _ in where_expression.walk():
             if isinstance(node, Identifier) and node.sql() in aliases:

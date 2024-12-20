@@ -17,7 +17,6 @@ from preset_cli.api.clients.dbt import (
 from preset_cli.cli.superset.sync.dbt.exposures import ModelKey
 from preset_cli.cli.superset.sync.dbt.metrics import (
     convert_metric_flow_to_superset,
-    convert_query_to_projection,
     get_metric_expression,
     get_metric_models,
     get_metrics_for_model,

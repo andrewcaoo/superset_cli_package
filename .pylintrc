@@ -1,5 +1,5 @@
 [MESSAGES CONTROL]
-disable = duplicate-code,use-implicit-booleaness-not-comparison,fixme
+disable = duplicate-code,use-implicit-booleaness-not-comparison,fixme,too-many-branches
 
 [MASTER]
 ignore=templates,docs
