@@ -278,20 +278,22 @@ def extract_aliases(parsed_query: Expression) -> Dict[str, str]:
 
 def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     """
-    Convert a MetricFlow compiled SQL to a projection.
+        Convert a MetricFlow compiled SQL to a projection.
     """
+    # Parse the query using the given dialect
     parsed_query = parse_one(sql, dialect=DIALECT_MAP.get(dialect))
 
-    # extract aliases from inner query
+    # Extract aliases from the inner query if there's a subquery
     scopes = traverse_scope(parsed_query)
     has_subquery = len(scopes) > 1
     aliases = extract_aliases(scopes[0].expression) if has_subquery else {}
 
-    # find the metric expression
+    # Locate the metric expression
     select_expression = parsed_query.find(Select)
     if select_expression.find(Join):
         raise ValueError("Unable to convert metrics with JOINs")
 
+    # Ensure there's only one expression in the SELECT clause
     projection = select_expression.args["expressions"]
     if len(projection) > 1:
         raise ValueError("Unable to convert metrics with multiple selected expressions")
@@ -300,37 +302,46 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
         projection[0].this if isinstance(projection[0], Alias) else projection[0]
     )
 
-    # replace aliases with their original expressions
-    for node, _, _ in metric_expression.walk():
-        if isinstance(node, Identifier) and node.sql() in aliases:
-            node.replace(parse_one(aliases[node.sql()]))
-
-    # convert WHERE predicate to a CASE statement
+    # Find the WHERE clause and convert it to a CASE statement
     where_expression = parsed_query.find(Where)
     if where_expression:
-
-        # Remove DISTINCT from metric to avoid conficting with CASE
+        # Handle DISTINCT removal, if present
         distinct = False
-        for node, _, _ in metric_expression.this.walk():
-            if isinstance(node, Distinct):
-                distinct = True
-                node.replace(node.expressions[0])
+        if hasattr(metric_expression, "this") and isinstance(metric_expression.this, Expression):
+            for node, _, _ in metric_expression.this.walk():
+                if isinstance(node, Distinct):
+                    distinct = True
+                    node.replace(node.expressions[0])
+        else:
+            _logger.warning(
+                f"Metric expression type {type(metric_expression.this)} is not iterable. Skipping DISTINCT check."
+            )
 
+        # Replace aliases in the WHERE clause with their original expressions
         for node, _, _ in where_expression.walk():
             if isinstance(node, Identifier) and node.sql() in aliases:
                 node.replace(parse_one(aliases[node.sql()]))
 
-        case_expression = Case(
-            ifs=[If(this=where_expression.this, true=metric_expression.this)],
-        )
+    # Replace aliases in the metric expression with their original expressions
+    for node, _, _ in metric_expression.walk():
+        if node.sql()[:7] == 'NULLIF(':
+            node.replace(node.this)
 
-        if distinct:
-            case_expression = Distinct(expressions=[case_expression])
+        if isinstance(node, Identifier) and node.sql() in aliases:
+            tree_alias = parse_one(aliases[node.sql()])
+            case_expr = tree_alias.find(exp.Case)
+            if case_expr and where_expression:
+                case_condition = case_expr.args["ifs"][0].args["this"]
+                full_condition = case_condition.and_(where_expression.this)
+                case_expr.args["ifs"][0].args["this"] = full_condition
+            node.replace(tree_alias)
 
-        metric_expression.set("this", case_expression)
-
-    return metric_expression.sql(dialect=DIALECT_MAP.get(dialect))
-
+    # Return the transformed SQL query as a string
+    str_metric_expression = metric_expression.sql(dialect=DIALECT_MAP.get(dialect))
+    str_metric_expression = str_metric_expression.replace("TODAY()", "today()")
+    str_metric_expression = str_metric_expression.replace("TOSTARTOFMONTH", "toStartOfMonth")
+    
+    return str_metric_expression
 
 def convert_metric_flow_to_superset(
     sl_metric: MFMetricWithSQLSchema,
