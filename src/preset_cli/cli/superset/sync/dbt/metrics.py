@@ -317,7 +317,7 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     # Replace aliases in the metric expression with their original expressions
     for node, _, _ in metric_expression.walk():
         # Handle `NULLIF` replacement
-        if isinstance(node, exp.Function) and node.sql().startswith("NULLIF("):
+        if node.sql().startswith("NULLIF("):
             if node.this:
                 node.replace(node.this)
 
