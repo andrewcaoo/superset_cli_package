@@ -287,7 +287,7 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     projection = select_expression.args.get("expressions", [])
     if len(projection) > 1:
         raise ValueError(
-            "Unable to convert metrics with multiple selected expressions"
+            "Unable to convert metrics with multiple selected expressions",
         )  # pragma: no cover
 
     metric_expression = (
@@ -329,11 +329,11 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
             case_expr = tree_alias.find(exp.Case)
             if case_expr and where_expression:
                 case_condition = case_expr.args.get("ifs", [{}])[0].get(
-                    "this"
+                    "this",
                 )  # pragma: no cover
                 if case_condition:  # pragma: no cover
                     full_condition = case_condition.and_(
-                        where_expression.this
+                        where_expression.this,
                     )  # pragma: no cover
                     case_expr.args["ifs"][0][
                         "this"
