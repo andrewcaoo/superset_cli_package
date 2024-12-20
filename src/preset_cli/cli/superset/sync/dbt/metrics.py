@@ -306,13 +306,16 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     where_expression = parsed_query.find(Where)
     if where_expression:
         # Handle DISTINCT removal, if present
-        if hasattr(metric_expression, "this") and isinstance(metric_expression.this, Expression):
+        if hasattr(metric_expression, "this") and isinstance(
+            metric_expression.this,
+            Expression,
+        ):
             for node, _, _ in metric_expression.this.walk():
                 if isinstance(node, Distinct) and node.expressions:
                     node.replace(node.expressions[0])
         else:
             _logger.warning(
-                f"Metric expression type {type(metric_expression.this)} is not iterable. Skipping DISTINCT check."
+                f"Metric expression type {type(metric_expression.this)} is not iterable. Skipping DISTINCT check.",
             )
 
         # Replace aliases in the WHERE clause with their original expressions
@@ -341,7 +344,10 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     # Return the transformed SQL query as a string
     str_metric_expression = metric_expression.sql(dialect=DIALECT_MAP.get(dialect))
     str_metric_expression = str_metric_expression.replace("TODAY()", "today()")
-    str_metric_expression = str_metric_expression.replace("TOSTARTOFMONTH", "toStartOfMonth")
+    str_metric_expression = str_metric_expression.replace(
+        "TOSTARTOFMONTH",
+        "toStartOfMonth",
+    )
 
     return str_metric_expression
 
