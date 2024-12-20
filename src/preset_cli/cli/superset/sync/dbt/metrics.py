@@ -278,7 +278,7 @@ def extract_aliases(parsed_query: Expression) -> Dict[str, str]:
 
 def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     """
-        Convert a MetricFlow compiled SQL to a projection.
+    Convert a MetricFlow compiled SQL to a projection.
     """
     # Parse the query using the given dialect
     parsed_query = parse_one(sql, dialect=DIALECT_MAP.get(dialect))
@@ -294,7 +294,7 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
         raise ValueError("Unable to convert metrics with JOINs")
 
     # Ensure there's only one expression in the SELECT clause
-    projection = select_expression.args["expressions"]
+    projection = select_expression.args.get("expressions", [])
     if len(projection) > 1:
         raise ValueError("Unable to convert metrics with multiple selected expressions")
 
@@ -306,11 +306,9 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
     where_expression = parsed_query.find(Where)
     if where_expression:
         # Handle DISTINCT removal, if present
-        distinct = False
         if hasattr(metric_expression, "this") and isinstance(metric_expression.this, Expression):
             for node, _, _ in metric_expression.this.walk():
-                if isinstance(node, Distinct):
-                    distinct = True
+                if isinstance(node, Distinct) and node.expressions:
                     node.replace(node.expressions[0])
         else:
             _logger.warning(
@@ -324,24 +322,29 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
 
     # Replace aliases in the metric expression with their original expressions
     for node, _, _ in metric_expression.walk():
-        if node.sql()[:7] == 'NULLIF(':
-            node.replace(node.this)
+        # Handle `NULLIF` replacement
+        if isinstance(node, exp.Function) and node.sql().startswith("NULLIF("):
+            if node.this:
+                node.replace(node.this)
 
+        # Replace identifiers with their alias definitions
         if isinstance(node, Identifier) and node.sql() in aliases:
             tree_alias = parse_one(aliases[node.sql()])
             case_expr = tree_alias.find(exp.Case)
             if case_expr and where_expression:
-                case_condition = case_expr.args["ifs"][0].args["this"]
-                full_condition = case_condition.and_(where_expression.this)
-                case_expr.args["ifs"][0].args["this"] = full_condition
+                case_condition = case_expr.args.get("ifs", [{}])[0].get("this")
+                if case_condition:
+                    full_condition = case_condition.and_(where_expression.this)
+                    case_expr.args["ifs"][0]["this"] = full_condition
             node.replace(tree_alias)
 
     # Return the transformed SQL query as a string
     str_metric_expression = metric_expression.sql(dialect=DIALECT_MAP.get(dialect))
     str_metric_expression = str_metric_expression.replace("TODAY()", "today()")
     str_metric_expression = str_metric_expression.replace("TOSTARTOFMONTH", "toStartOfMonth")
-    
+
     return str_metric_expression
+
 
 def convert_metric_flow_to_superset(
     sl_metric: MFMetricWithSQLSchema,
