@@ -264,7 +264,7 @@ def test_create_engine_with_check(mocker: MockerFixture) -> None:
     Test the ``create_engine_with_check`` method.
     """
     mock_engine = mocker.patch("preset_cli.cli.superset.sync.dbt.lib.create_engine")
-    test = create_engine_with_check(URL("blah://blah"))
+    test = create_engine_with_check(URL.create("blah://blah"))
     assert test == mock_engine.return_value
 
 
@@ -274,7 +274,7 @@ def test_create_engine_with_check_missing_snowflake() -> None:
     not installed.
     """
     with pytest.raises(CLIError) as excinfo:
-        create_engine_with_check(URL("snowflake://blah"))
+        create_engine_with_check(URL.create("snowflake://blah"))
     assert 'run ``pip install "preset-cli[snowflake]"``' in str(excinfo.value)
 
 
@@ -284,7 +284,7 @@ def test_create_engine_with_check_missing_unknown_driver() -> None:
     not installed.
     """
     with pytest.raises(NotImplementedError) as excinfo:
-        create_engine_with_check(URL("mssql+odbc://blah"))
+        create_engine_with_check(URL.create("mssql+odbc://blah"))
     assert "Unable to build a SQLAlchemy Engine for the mssql+odbc connection" in str(
         excinfo.value,
     )
