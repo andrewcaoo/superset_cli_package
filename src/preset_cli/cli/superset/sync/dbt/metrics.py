@@ -305,9 +305,10 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
                     node.replace(node.expressions[0])
         else:
             _logger.warning(
-                f"""Metric expression type {type(metric_expression.this)} is not iterable.
-                Skipping DISTINCT check.""",
+                "Metric expression type %s is not iterable. Skipping DISTINCT check.",
+                type(metric_expression.this),
             )
+
 
         # Replace aliases in the WHERE clause with their original expressions
         for node, _, _ in where_expression.walk():
