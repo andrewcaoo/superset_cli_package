@@ -729,7 +729,7 @@ def test_verify_db_connectivity(mocker: MockerFixture) -> None:
     verify_db_connectivity(config)
 
     create_engine.assert_called_with(
-        URL(
+        URL.create(
             "postgresql",
             username="username",
             password="SECRET",
@@ -754,7 +754,7 @@ def test_verify_db_connectivity_no_password(mocker: MockerFixture) -> None:
     verify_db_connectivity(config)
 
     create_engine.assert_called_with(
-        URL("gsheets"),
+        URL.create("gsheets"),
     )
 
 
