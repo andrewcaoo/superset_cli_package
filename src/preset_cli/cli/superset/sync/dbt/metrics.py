@@ -14,17 +14,7 @@ from typing import Dict, List, Optional, Set
 
 import sqlglot
 from sqlglot import Expression, ParseError, exp, parse_one
-from sqlglot.expressions import (
-    Alias,
-    Case,
-    Distinct,
-    Identifier,
-    If,
-    Join,
-    Select,
-    Table,
-    Where,
-)
+from sqlglot.expressions import Alias, Distinct, Identifier, Join, Select, Table, Where
 from sqlglot.optimizer import traverse_scope
 
 from preset_cli.api.clients.dbt import (
@@ -315,7 +305,8 @@ def convert_query_to_projection(sql: str, dialect: MFSQLEngine) -> str:
                     node.replace(node.expressions[0])
         else:
             _logger.warning(
-                f"Metric expression type {type(metric_expression.this)} is not iterable. Skipping DISTINCT check.",
+                f"""Metric expression type {type(metric_expression.this)} is not iterable.
+                Skipping DISTINCT check.""",
             )
 
         # Replace aliases in the WHERE clause with their original expressions
